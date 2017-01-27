@@ -17,6 +17,10 @@ impl<T, O: Observer<Observes = T>> ObservableValue<T, O> {
     pub fn clean(&mut self) {
         self.observables.retain(|o| o.upgrade().is_some());
     }
+
+    pub fn observables(&self) -> usize {
+        self.observables.len()
+    }
 }
 
 impl<T, O: Observer<Observes = T>> Observable<O> for ObservableValue<T, O> {
