@@ -25,14 +25,14 @@ mod tests {
     }
 
     #[test]
-    fn updates_subscribers() {
+    fn integration_test() {
         let mut observable = ObservableValue::new(5usize);
         let observer = Rc::new(SimpleObserver::new());
-        observable.register_observer(Rc::downgrade(&observer));
+        observable.register(Rc::downgrade(&observer));
 
         {
             let observer_2 = Rc::new(SimpleObserver::new());
-            observable.register_observer(Rc::downgrade(&observer_2));
+            observable.register(Rc::downgrade(&observer_2));
             observable.clean();
 
             // Both registered

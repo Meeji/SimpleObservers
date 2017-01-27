@@ -28,11 +28,11 @@ fn main() {
 
     // Observable stores weak references to observers
     let observer_one = Rc::new(SimpleObserver::new("obs1"));
-    observable.register_observer(Rc::downgrade(&observer_one));
+    observable.register(Rc::downgrade(&observer_one));
     
     {
         let observer_two = Rc::new(SimpleObserver::new("obs2"));
-        observable.register_observer(Rc::downgrade(&observer_two));
+        observable.register(Rc::downgrade(&observer_two));
         
         // Sets the value, prunes dead observable references and notifies the rest
         // Observables 1 and 2 update!
