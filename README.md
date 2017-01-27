@@ -1,6 +1,8 @@
 # SimpleObservers
 A simple implementation of observables/observers in Rust
 
+
+## Usage:
 ```rust
 struct SimpleObserver {
     name: String,
@@ -42,5 +44,14 @@ fn main() {
     // Mutate the inner value in place, notifying observers
     // Observable 2 reference is pruned, and observable 1 updates
     observable.mutate(|n| n + 5);
+
+    // Observable can be updated without notifying observers
+    observable.set_silent(1001);
+
+    // Observable can be told to only update and notify if the new value is changing
+    observable.set_if_changed(1001);
+
+    // And you can notify the observers without updating the value
+    observable.trigger();
 }
 ```

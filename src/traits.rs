@@ -1,19 +1,25 @@
 use std::rc::Weak;
 
 pub trait Observable<O: Observer<Observes = Self::Has>> {
-    type Has;
+    type Has: PartialEq;
 
     fn register(&mut self, observer: Weak<O>);
 
-    fn update(&mut self);
+    fn trigger(&mut self);
 
-    fn set_without_update(&mut self, data: Self::Has);
+    fn set_silently(&mut self, data: Self::Has);
 
     fn peek(&self) -> &Self::Has;
 
     fn set(&mut self, data: Self::Has) {
-        self.set_without_update(data);
-        self.update();
+        self.set_silently(data);
+        self.trigger();
+    }
+
+    fn set_if_changed(&mut self, data: Self::Has) {
+        if data != *self.peek() {
+            self.set(data)
+        }
     }
 
     fn mutate<F>(&mut self, mut f: F)

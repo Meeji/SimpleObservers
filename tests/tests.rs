@@ -59,5 +59,11 @@ mod tests {
 
         // Observer updated
         assert_eq!(*observer.updates.borrow(), [10, 20]);
+
+        observable.set_silently(1);
+        observable.set_if_changed(1);
+
+        // Observer not updated
+        assert_eq!(*observer.updates.borrow(), [10, 20]);
     }
 }

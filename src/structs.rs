@@ -1,12 +1,12 @@
 use std::rc::Weak;
 use traits::*;
 
-pub struct ObservableValue<T, O: Observer<Observes = T>> {
+pub struct ObservableValue<T: PartialEq, O: Observer<Observes = T>> {
     observables: Vec<Weak<O>>,
     value: T,
 }
 
-impl<T, O: Observer<Observes = T>> ObservableValue<T, O> {
+impl<T: PartialEq, O: Observer<Observes = T>> ObservableValue<T, O> {
     pub fn new(value: T) -> ObservableValue<T, O> {
         ObservableValue {
             observables: vec![],
@@ -23,14 +23,14 @@ impl<T, O: Observer<Observes = T>> ObservableValue<T, O> {
     }
 }
 
-impl<T, O: Observer<Observes = T>> Observable<O> for ObservableValue<T, O> {
+impl<T: PartialEq, O: Observer<Observes = T>> Observable<O> for ObservableValue<T, O> {
     type Has = T;
 
     fn register(&mut self, observer: Weak<O>) {
         self.observables.push(observer);
     }
 
-    fn set_without_update(&mut self, data: T) {
+    fn set_silently(&mut self, data: T) {
         self.value = data;
     }
 
@@ -38,7 +38,7 @@ impl<T, O: Observer<Observes = T>> Observable<O> for ObservableValue<T, O> {
         &self.value
     }
 
-    fn update(&mut self) {
+    fn trigger(&mut self) {
         self.clean();
 
         for o in &self.observables {
