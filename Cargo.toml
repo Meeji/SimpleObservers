@@ -1,6 +1,6 @@
 [package]
-name = "observer"
+name = "simple_observables"
 version = "0.1.0"
-authors = ["Seb <sebastian.brabiner@gmail.com>"]
+authors = ["Seb"]
 
 [dependencies]
