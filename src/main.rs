@@ -12,6 +12,13 @@ trait Observable<O: Observer<Observes = Self::Has>> {
     fn set_without_update(&mut self, data: Self::Has);
 
     fn peek(&self) -> &Self::Has;
+
+    fn mutate<F>(&mut self, mut f: F)
+        where F: FnMut(&Self::Has) -> Self::Has
+    {
+        let new_value = f(self.peek());
+        self.set(new_value);
+    }
 }
 
 
@@ -34,13 +41,13 @@ impl<T> Observer for Box<Observer<Observes = T>> {
 
 
 
-struct StrongObservable<O: Observer<Observes = usize>> {
+struct ObservableValue<T, O: Observer<Observes = T>> {
     observables: Vec<Weak<O>>,
-    value: usize,
+    value: T,
 }
-impl<O: Observer<Observes = usize>> StrongObservable<O> {
-    fn new(value: usize) -> StrongObservable<O> {
-        StrongObservable {
+impl<T, O: Observer<Observes = T>> ObservableValue<T, O> {
+    fn new(value: T) -> ObservableValue<T, O> {
+        ObservableValue {
             observables: vec![],
             value: value,
         }
@@ -50,22 +57,22 @@ impl<O: Observer<Observes = usize>> StrongObservable<O> {
         self.observables.retain(|o| o.upgrade().is_some());
     }
 }
-impl<O: Observer<Observes = usize>> Observable<O> for StrongObservable<O> {
-    type Has = usize;
+impl<T, O: Observer<Observes = T>> Observable<O> for ObservableValue<T, O> {
+    type Has = T;
 
     fn register_observer(&mut self, observer: Weak<O>) {
         self.observables.push(observer);
     }
 
-    fn set_without_update(&mut self, data: usize) {
+    fn set_without_update(&mut self, data: T) {
         self.value = data;
     }
 
-    fn peek(&self) -> &usize {
+    fn peek(&self) -> &T {
         &self.value
     }
 
-    fn set(&mut self, data: usize) {
+    fn set(&mut self, data: T) {
         self.clean();
 
         for o in &self.observables {
@@ -81,15 +88,15 @@ impl<O: Observer<Observes = usize>> Observable<O> for StrongObservable<O> {
 
 
 
-struct ObserverStruct {
+struct SimpleObserver {
     name: String,
 }
-impl ObserverStruct {
-    fn new(name: &str) -> ObserverStruct {
-        ObserverStruct { name: name.to_string() }
+impl SimpleObserver {
+    fn new(name: &str) -> SimpleObserver {
+        SimpleObserver { name: name.to_string() }
     }
 }
-impl Observer for ObserverStruct {
+impl Observer for SimpleObserver {
     type Observes = usize;
 
     fn update(&self, data: &usize) {
@@ -101,15 +108,15 @@ impl Observer for ObserverStruct {
 
 fn main() {
     {
-        let mut observable = StrongObservable::new(5);
+        let mut observable = ObservableValue::new(5);
 
-        let observer_one = Rc::new(ObserverStruct::new("obs1"));
-        let observer_two = Rc::new(ObserverStruct::new("obs2"));
+        let observer_one = Rc::new(SimpleObserver::new("obs1"));
+        let observer_two = Rc::new(SimpleObserver::new("obs2"));
 
         observable.register_observer(Rc::downgrade(&observer_one));
         observable.register_observer(Rc::downgrade(&observer_two));
         {
-            let observer_three = Rc::new(ObserverStruct::new("obs3"));
+            let observer_three = Rc::new(SimpleObserver::new("obs3"));
             observable.register_observer(Rc::downgrade(&observer_three));
             observable.set(6usize);
         }
@@ -117,21 +124,21 @@ fn main() {
         observable.set(7usize);
     }
     {
-        let mut observable = StrongObservable::new(100);
-        let observer_one = Rc::new(Box::new(ObserverStruct::new("obs1")) as
+        let mut observable = ObservableValue::new(100);
+        let observer_one = Rc::new(Box::new(SimpleObserver::new("obs1")) as
                                    Box<Observer<Observes = usize>>);
-        let observer_two = Rc::new(Box::new(ObserverStruct::new("obs2")) as
+        let observer_two = Rc::new(Box::new(SimpleObserver::new("obs2")) as
                                    Box<Observer<Observes = usize>>);
 
         observable.register_observer(Rc::downgrade(&observer_one));
         observable.register_observer(Rc::downgrade(&observer_two));
         {
-            let observer_three = Rc::new(Box::new(ObserverStruct::new("obs3")) as
+            let observer_three = Rc::new(Box::new(SimpleObserver::new("obs3")) as
                                          Box<Observer<Observes = usize>>);
             observable.register_observer(Rc::downgrade(&observer_three));
             observable.set(200usize);
         }
 
-        observable.set(300usize);
+        observable.mutate(|n| n + 10);
     }
 }
