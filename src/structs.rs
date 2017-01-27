@@ -42,9 +42,8 @@ impl<T: PartialEq, O: Observer<Observes = T>> Observable<O> for ObservableValue<
         self.clean();
 
         for o in &self.observables {
-            match o.upgrade() {
-                Some(o) => o.update(&self.value),
-                _ => (),
+            if let Some(o) = o.upgrade() {
+                o.update(&self.value);
             }
         }
     }
